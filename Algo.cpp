@@ -1,4 +1,4 @@
-// Os Project on All types of Scheduling algorithms
+// Os Educational tool for teaching Scheduling algorithms
 
 #include <iostream>
 #include <numeric>
@@ -83,7 +83,8 @@ int get_observation_time(int selected_algo){
 		return sum;
 	}
 
-	else if(selected_algo == 3){
+	else if(selected_al
+	go == 3){
 		return max(period[0],period[1],period[2]);
 	}
 
@@ -120,7 +121,7 @@ void print_schedule(int process_list[], int cycles){
 
 
 //SJF function to calculate scheduling sequence
-void shortest_job_first(int cycles){
+void shortest_job_first_np(int cycles){
     int process_list[cycles], time = 0, shortest_process;
     int waiting_time[num_of_process] = {0};
     int turnaround_time[num_of_process] = {0};
@@ -169,6 +170,65 @@ void shortest_job_first(int cycles){
     cout << endl << "Process\t\tBurst Time\tArrival Time\tWaiting Time\tTurnaround Time\n";
     for (int i = 0; i < num_of_process; i++){
         cout << "P[" << i+1 << "]\t\t" << burst_time[i] << "\t\t" << arrival_time[i] << "\t\t" << waiting_time[i] << "\t\t" << turnaround_time[i] << endl;
+    }
+    cout << endl << "Average Waiting Time: " << total_waiting_time*1.0/num_of_process;
+    cout << endl << "Average Turnaround Time: " << total_turnaround_time*1.0/num_of_process;
+}
+
+void shortest_job_first_wp(int cycles, float alpha){
+    int process_list[cycles], time = 0, shortest_process;
+    int waiting_time[num_of_process] = {0};
+    int turnaround_time[num_of_process] = {0};
+    int predicted_burst_time[num_of_process] = {};
+	// for(int i=0;i<num_of_process;i++) predicted_burst_time[i]=i;
+    float alpha_float = alpha/100.0; // convert alpha from integer to float and divide by 100 to get the decimal value
+	int last=0;
+    while (cnt != num_of_process){
+        shortest_process = -1;
+        for (int i = 0; i < num_of_process; i++){
+            if (arrival_time[i] <= time && remain_time[i] > 0){
+                if (shortest_process == -1 || predicted_burst_time[i] < predicted_burst_time[shortest_process]){
+                    shortest_process = i;
+                }
+            }
+        }
+
+        if (shortest_process == -1){
+            time++;
+            continue;
+        }
+
+        process_list[time] = shortest_process+1;
+
+        // Calculate predicted burst time using formula
+        if (time > 0) {
+            predicted_burst_time[shortest_process] = alpha_float * burst_time[shortest_process] + (1.0 - alpha_float) * last;
+        } else {
+            predicted_burst_time[shortest_process] = burst_time[shortest_process];
+        }
+		last=predicted_burst_time[shortest_process];
+        remain_time[shortest_process]--;
+
+        if (remain_time[shortest_process] == 0){
+            cnt++;
+            int completion_time = time+1;
+            turnaround_time[shortest_process] = completion_time - arrival_time[shortest_process];
+            waiting_time[shortest_process] = turnaround_time[shortest_process] - burst_time[shortest_process];
+        }
+        time++;
+    }
+
+    int total_waiting_time = 0, total_turnaround_time = 0;
+    for (int i = 0; i < num_of_process; i++){
+        total_waiting_time += waiting_time[i];
+        total_turnaround_time += turnaround_time[i];
+    }
+
+    //Printing scheduling sequence and performance metrics
+    print_schedule(process_list, cycles);
+    cout << endl << "Process\t\tPredicted Burst Time\tArrival Time\tWaiting Time\tTurnaround Time\n";
+    for (int i = 0; i < num_of_process; i++){
+        cout << "P[" << i+1 << "]\t\t" << predicted_burst_time[i] << "\t\t\t\t" << arrival_time[i] << "\t\t" << waiting_time[i] << "\t\t" << turnaround_time[i] << endl;
     }
     cout << endl << "Average Waiting Time: " << total_waiting_time*1.0/num_of_process;
     cout << endl << "Average Turnaround Time: " << total_turnaround_time*1.0/num_of_process;
@@ -425,6 +485,35 @@ void earliest_deadline_first(int time){
 	print_schedule(process_list, time);
 }
 
+void give_info(int choice)
+{
+	if(choice==1)
+	{
+		cout << "First Come First Serve CPU Scheduling Algorithm shortly known as FCFS is the first algorithm of CPU Process Scheduling Algorithm. In First Come First Serve Algorithm what we do is to allow the process to execute in linear manner.\nThis means that whichever process enters process enters the ready queue first is executed first.\n This shows that First Come First Serve Algorithm follows First In First Out (FIFO) principle.\nThis can be seen in real life in movie ticket counters.\n";
+	}
+	else if(choice ==2)
+	{
+		cout << "The Round-robin scheduling algorithm is a kind of preemptive First come, First Serve CPU Scheduling algorithm where each process in the ready state gets the CPU for a fixed time in a cyclic way (turn by turn). \nIt is the oldest scheduling algorithm, which is mainly used for multitasking\n";
+	}
+	else if(choice==3)
+	{
+		cout<<"Rate Monotonic analysis addresses how to determine whether a group of tasks, whose individual CPU utilization is known, will meet their deadlines. \nThis approach assumes a priority preemption scheduling algorithm\n";
+		cout<<"It uses an optimal fixed priority policy where higher the frequency of the task higher is its priority.\nIt is used in systems like DSP/BIOS and VxWorks\n ";
+	}
+	else if(choice==4)
+	{
+		cout<<"Earliest deadline first (EDF) or least time to go is a dynamic priority scheduling algorithm used in real-time operating systems to place processes in a \npriority queue. Whenever a scheduling event occurs (task finishes, new task released, etc.) the queue will be searched for the process closest to its deadline. This process is the next to be scheduled for execution.\n";\
+		cout<<"This algorithm is used for real time embedded systems\n";
+	}
+	else if(choice ==5 )
+	{
+		cout<<"Shortest job next, also known as shortest job first or shortest process next, is a scheduling policy that selects for execution the waiting process with the smallest execution time.\n";
+		cout<<"This variant of SJF used the recursive relation T(n+1)=alpha*burst_time(n)+ (1-alpha)*T(n)\n";
+	}
+	cout<<endl;
+	return ;
+}
+
 int main(int argc, char* argv[]) 
 {
 	int option = 0;
@@ -435,12 +524,17 @@ int main(int argc, char* argv[])
 	cout << "2. Round Robin" << endl;
 	cout << "3. Rate Monotonic Scheduling" << endl;
 	cout << "4. Earliest Deadline First" << endl;
-	cout << "5. Shortest job first" << endl;
+	cout << "5. Shortest job first with predictions" << endl;
 	cout << "-----------------------------" << endl;
 	cout << "Select > "; 
 	cin >> option;
 	cout << "-----------------------------" << endl;
-
+	if(option>5) 
+	{
+		cout<<"Oops wrong input";
+		return 0;
+	}
+	give_info(option);
 	get_process_info(option);		//collecting processes detail
 	int observation_time = get_observation_time(option);
 
@@ -453,7 +547,6 @@ int main(int argc, char* argv[])
 	else if (option == 4)
 		earliest_deadline_first(observation_time);
 	else if (option ==5 )
-		shortest_job_first(observation_time);
-	else cout<<"Oops wrong input";
+		shortest_job_first_wp(observation_time,0.3);
 	return 0;
 }
